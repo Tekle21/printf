@@ -1,76 +1,54 @@
 #include "main.h"
-#include "main.h"
 
 /**
- * print_op - function to check which specifier to print
- * @format: string being passed
- * @print_arr: array of struct ops
- * @list: list of arguments to print
- * Return: numb of char to be printed
- */
-int print_op(const char *format, fmt_t *print_arr, va_list list)
-{
-	char a;
-	int count = 0, b = 0, c = 0;
-
-	a = format[b];
-	while (a != '\0')
-	{
-		if (a == '%')
-		{
-			c = 0;
-			b++;
-			a = format[b];
-			while (print_arr[c].type != NULL &&
-			       a != *(print_arr[c].type))
-				c++;
-			if (print_arr[c].type != NULL)
-				count = count + print_arr[c].f(list);
-			else
-			{
-				if (a == '\0')
-					return (-1);
-				if (a != '%')
-					count += _putchar('%');
-				count += _putchar(a);
-			}
-		}
-		else
-			count += _putchar(a);
-		b++;
-		a = format[b];
-	}
-	return (count);
-}
-
-/**
- * _printf - prints output according to format
- * @format: string being passed
- * Return: char to be printed
+ * _printf - Function that prints formatted output.
+ *
+ * @format: a string composed of zero or more characters to print or use as
+ * directives that handle subsequent arguments and special characters.
+ *
+ * Description: This function can take a variable number and type of arguments
+ * that should be printed to standard output.
+ *
+ * Return: int
  */
 int _printf(const char *format, ...)
 {
-	va_list list;
-	int a = 0;
+	va_list args;
+	int i = 0, chars_printed = 0;
 
-	fmt_t ops[] = {
-		{"c", ch},
-		{"s", str},
-		{"d", _int},
-		{"b", _bin},
-		{"i", _int},
-		{"u", _ui},
-		{"o", _oct},
-		{"x", _hex_l},
-		{"X", _hex_u},
-		{"R", _rot13},
-		{NULL, NULL}
-	};
-
-	if (format == NULL)
-		return (-1);
-	va_start(list, format);
-	a = print_op(format, ops, list);
-	va_end(list);
-	return (a);
+	va_start(args, format);
+	while (format && format[i])
+	{
+		if (format[i] != '%')
+		{
+			chars_printed += _putchar(format[i]);
+		}
+		else if (format[i + 1])
+		{
+			i++;
+			if (format[i] == 'c' || format[i] == 's')
+				chars_printed += format[i] == 'c' ? _putchar(va_arg(args, int)) :
+				print_string(va_arg(args, char *));
+			else if (format[i] == 'd' || format[i] == 'i')
+				chars_printed += print_num(va_arg(args, int));
+			else if (format[i] == 'b')
+				chars_printed += print_binary((unsigned int)va_arg(args, int));
+			else if (format[i] == 'r')
+				chars_printed += print_reverse(va_arg(args, char *));
+			else if (format[i] == 'R')
+				chars_printed += print_rot13(va_arg(args, char *));
+			else if (format[i] == 'o' || format[i] == 'u' ||
+			format[i] == 'x' || format[i] == 'X')
+				chars_printed += print_odh(format[i], (unsigned int)va_arg(args, int));
+			else if (format[i] == 'S')
+				chars_printed += print_S(va_arg(args, char *));
+			else if (format[i] == 'p')
+				chars_printed += print_pointer(va_arg(args, void *));
+			else
+				chars_printed += print_unknown_spec(format[i]);
+		}
+		i++;
+	}
+	va_end(args);
+	return (chars_printed);
 }
